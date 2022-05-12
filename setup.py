@@ -12,5 +12,5 @@ setup(
     author="JeanTheShiba",
     author_email="jeanlfbr.pro@outlook.fr",
     license="MIT",
-    requires=requirements,
+    install_requires=requirements,
 )

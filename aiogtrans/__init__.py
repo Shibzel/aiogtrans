@@ -6,4 +6,4 @@ from .constants import LANGUAGES
 
 __author__ = "JeanLeShiba"
 __email__ = "jeanlfbr.pro@outlook.fr"
-__version__ = "1.0.0"
+__version__ = "0.1.0"

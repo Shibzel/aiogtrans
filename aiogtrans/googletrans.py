@@ -1,7 +1,7 @@
 import aiohttp
 from bs4 import BeautifulSoup
 
-from exceptions import (
+from .exceptions import (
     LengthExceeded,
     TextEmpty,
     SameSourceTarget,
@@ -9,8 +9,8 @@ from exceptions import (
     TooManyRequests,
     RequestError
 )
-from constants import LANGUAGES
-from models import Translated
+from .constants import LANGUAGES
+from .models import Translated
 
 
 def is_input_valid(text: str, limit: int = 5000) -> bool:
@@ -163,20 +163,3 @@ class GoogleTrans:
                 result)],  # Gets the key by value
             result
         )
-
-
-if __name__ == "__main__":
-    import asyncio
-    import time
-
-    async def main():
-        async with GoogleTrans() as translator:
-            start_time = time.time()
-            result = await translator.translate("Never gonna give you up, never gonna let you down")
-            print(str(result).upper())
-            print(result.source)
-            print("Took", round(time.time() - start_time, 2), "seconds.")
-        # Useless, just here to let the code close the aiohttp session.
-        await asyncio.sleep(0.5)
-
-    asyncio.run(main())

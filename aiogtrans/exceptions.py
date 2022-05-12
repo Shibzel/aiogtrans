@@ -1,4 +1,4 @@
-from constants import LANGUAGES
+from .constants import LANGUAGES
 
 
 class LengthExceeded(Exception):
