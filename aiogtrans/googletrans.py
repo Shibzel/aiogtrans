@@ -24,7 +24,7 @@ def is_input_valid(text: str, limit: int = 5000) -> bool:
         bool
     """
     if not isinstance(text, str):
-        raise ValueError("Text must be a string.")
+        raise ValueError(f"Text must be a string not '{type(text)}'.")
     elif len(text) > limit:
         raise LengthExceeded(
             f"Maximum length exceeded : {len(text)} (text) --> {limit} (limit).")
