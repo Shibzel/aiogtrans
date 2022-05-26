@@ -13,12 +13,12 @@ from .constants import LANGUAGES
 from .models import Translated
 
 
-def is_input_valid(text: str, limit: int = 5000) -> bool:
+def is_input_valid(text: str, limit: int = 2048) -> bool:
     """Checks if the text is standarts or not.
 
     Args:
         text (str): Source text.
-        limit (int, optional): Limit of characters. Defaults to 5000.
+        limit (int, optional): Limit of characters. Defaults to 2048.
 
     Returns:
         bool
@@ -33,13 +33,26 @@ def is_input_valid(text: str, limit: int = 5000) -> bool:
     return True
 
 
-def get_supported_languages_codes() -> list:
-    """Returns a list of supported languages.
+def check_response(response: aiohttp.ClientResponse) -> bool:
+    """Checks the response.
+
+    Args:
+        response (aiohttp.ClientResponse): The client reponse.
+
+    Raises:
+        TooManyRequests: Too many requests were made (error 429).
+        RequestError: Failed trying to make a request call (error 200).
 
     Returns:
-        list
+        bool
     """
-    return list(LANGUAGES.values())
+    if response.status == 429:
+        raise TooManyRequests(
+            "You made too many requests (maximum : 5 req/sec and 200k req/day).")
+    if response.status != 200:
+        raise RequestError(
+            "Error while trying to make a request call to the API, try again and check your connexion.")
+    return True
 
 
 class GoogleTrans:
@@ -74,8 +87,9 @@ class GoogleTrans:
         target: str = "en",
         session: aiohttp.ClientSession = None,
         url: str = "http://translate.google.com/m",
-        proxy: str = None
+        proxy: str = None,
     ):
+
         if source == target:
             raise SameSourceTarget(
                 f"The source and the target cant be the same : '{source}' (source) --> '{target}' (target)")
@@ -92,9 +106,13 @@ class GoogleTrans:
 
         self.source = source
         self.target = target
-        self.proxy = proxy
-        self.session = session if session else aiohttp.ClientSession()
+        self.session = session if session else aiohttp.ClientSession(
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"
+            }
+        )
         self.url = url
+        self.proxy = proxy
 
     async def close(self) -> None:
         """Closes the aiohttp session."""
@@ -110,7 +128,7 @@ class GoogleTrans:
         """Translates a text.
 
         Args:
-            text (str) : Original text.
+            text (str): Original text.
 
         Returns:
             str: Translated text.
@@ -123,24 +141,20 @@ class GoogleTrans:
         """
         if is_input_valid(text):
             async with self.session.get(
-                self.url,
+                url=self.url,
                 params={
-                    "client": "webapp",
                     "sl": self.source,
                     "tl": self.target,
                     "q": text
                 },
                 proxy=self.proxy,
             ) as response:
-
-                if response.status == 429:
-                    raise TooManyRequests(
-                        "You made too many requests (maximum : 5 req/sec and 200k req/day).")
-                if response.status != 200:
-                    raise RequestError(
-                        "Error while trying to make a request call to the API, try again and check your connexion.")
-
-                return Translated(original_text=text, cls=BeautifulSoup(await response.text(), "html.parser"))
+                if check_response(response):
+                    # return print(await response.text())
+                    return Translated(
+                        original_text=text,
+                        cls=BeautifulSoup(await response.text(), "html.parser"),
+                    )
 
     async def detect(self, text: str) -> tuple:
         """Detects the language.
@@ -157,9 +171,8 @@ class GoogleTrans:
             >>> result[1]
             returns: 'it'
         """
-        result = (await self.translate(text)).source
+        result = (await self.translate(text)).source.lower()
         return (
-            list(LANGUAGES.keys())[list(LANGUAGES.values()).index(
-                result)],  # Gets the key by value
-            result
+            list(LANGUAGES.keys())[list(LANGUAGES.values()).index(result)],
+            result,
         )
