@@ -19,11 +19,9 @@ class SameSourceTarget(Exception):
 class UnsupportedLanguage(Exception):
     """Exception raised for unsupported languages."""
 
-    def __init__(self, language):
+    def __init__(self, language, message: str | None = None):
         self.language = language
-
-    def __str__(self):
-        return f"No support for the provided language : '{self.language}'.\nPlease select one of the supported languages:\n{LANGUAGES}"
+        super().__init__(message or f"No support for the provided language : '{self.language}'.\nPlease select one of the supported languages:\n{LANGUAGES}")
 
 
 class TooManyRequests(Exception):

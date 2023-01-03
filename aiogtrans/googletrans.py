@@ -47,11 +47,9 @@ def check_response(response: aiohttp.ClientResponse) -> bool:
         bool
     """
     if response.status == 429:
-        raise TooManyRequests(
-            "You made too many requests (maximum : 5 req/sec and 200k req/day).")
+        raise TooManyRequests("You made too many requests (maximum : 5 req/sec and 200k req/day).")
     if response.status != 200:
-        raise RequestError(
-            "Error while trying to make a request call to the API, try again and check your connexion.")
+        raise RequestError("Error while trying to make a request call to the API, try again and check your connexion.")
     return True
 
 
@@ -85,32 +83,28 @@ class GoogleTrans:
         self,
         source: str = "auto",
         target: str = "en",
-        session: aiohttp.ClientSession = None,
+        session: aiohttp.ClientSession | None = None,
         url: str = "http://translate.google.com/m",
-        proxy: str = None,
-    ):
+        proxy: str | None = None,
+    ) -> None:
 
         if source == target:
-            raise SameSourceTarget(
-                f"The source and the target cant be the same : '{source}' (source) --> '{target}' (target)")
+            raise SameSourceTarget(f"The source and the target cant be the same : '{source}' (source) --> '{target}' (target)")
 
         if source in LANGUAGES.keys():
             source = LANGUAGES[source]
-        elif source != "auto" and not source in LANGUAGES.values():
+        elif source != "auto" and source not in LANGUAGES.values():
             raise UnsupportedLanguage(source)
 
         if target in LANGUAGES.keys():
             target = LANGUAGES[target]
-        elif not target in LANGUAGES.values():
+        elif target not in LANGUAGES.values():
             raise UnsupportedLanguage(target)
 
         self.source = source
         self.target = target
         self.session = session if session else aiohttp.ClientSession(
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"
-            }
-        )
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0"})
         self.url = url
         self.proxy = proxy
 
@@ -118,10 +112,10 @@ class GoogleTrans:
         """Closes the aiohttp session."""
         await self.session.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         return self
 
-    async def __aexit__(self, exception_type, exception_value, traceback):
+    async def __aexit__(self, exception_type, exception_value, traceback) -> None:
         await self.close()
 
     async def translate(self, text: str) -> Translated:
@@ -142,21 +136,13 @@ class GoogleTrans:
         if is_input_valid(text):
             async with self.session.get(
                 url=self.url,
-                params={
-                    "sl": self.source,
-                    "tl": self.target,
-                    "q": text
-                },
-                proxy=self.proxy,
-            ) as response:
+                params={"sl": self.source, "tl": self.target, "q": text},
+                proxy=self.proxy,) as response:
                 if check_response(response):
                     # return print(await response.text())
-                    return Translated(
-                        original_text=text,
-                        cls=BeautifulSoup(await response.text(), "html.parser"),
-                    )
+                    return Translated(original_text=text, cls=BeautifulSoup(await response.text(), "html.parser"),)
 
-    async def detect(self, text: str) -> tuple:
+    async def detect(self, text: str) -> tuple[str]:
         """Detects the language.
 
         Args:
@@ -172,7 +158,4 @@ class GoogleTrans:
             returns: 'it'
         """
         result = (await self.translate(text)).source.lower()
-        return (
-            list(LANGUAGES.keys())[list(LANGUAGES.values()).index(result)],
-            result,
-        )
+        return (list(LANGUAGES.keys())[list(LANGUAGES.values()).index(result)], result,)

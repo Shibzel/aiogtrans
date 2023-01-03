@@ -1,4 +1,5 @@
 # Aiogtrans
+An asynchronous and unlimited library done on the fly for google translate.
 
 ### Example of usage
 
@@ -19,5 +20,3 @@ Output :
 Bonjour à tous !
 ('deutch', 'de')
 ```
-
-*This readme file is temporary, i'll improve it later.*

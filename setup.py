@@ -5,7 +5,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="aiogtrans",
-    url="https://github.com/JeanLeShiba/aiogtrans",
+    url="https://github.com/Shibzel/aiogtrans",
     packages=['aiogtrans'],
     version="0.1.0",
     description="",
